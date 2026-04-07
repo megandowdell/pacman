@@ -322,6 +322,30 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         moveGhost(ghost);
     }
 
+    // convert pixel position to grid row
+    private int getRow(Block b) {
+        return b.y / tileSize;
+    }
+
+    // convert pixel position to grid column
+    private int getCol(Block b) {
+        return b.x / tileSize;
+    }
+
+    // check if a tile is a wall (or out of bounds)
+    private boolean isWall(int row, int col) {
+        if (row < 0 || row >= rowCount || col < 0 || col >= columnCount) {
+            return true;
+        }
+
+        return tileMap[row].charAt(col) == 'X';
+    }
+
+    // check if ghost is exactly on a tile (not between tiles)
+    private boolean isAtTile(Block b) {
+        return b.x % tileSize == 0 && b.y % tileSize == 0;
+    }
+
     private void checkWallCollision(Block block) {
         for (Block wall : walls) {
             if (collision(block, wall) || block.x <= 0 || block.x + block.width >= boardWidth) {
