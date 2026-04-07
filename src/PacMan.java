@@ -346,6 +346,17 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         return b.x % tileSize == 0 && b.y % tileSize == 0;
     }
 
+    // figure out which direction to move from one tile to another
+    private char getDirectionToward(int fromRow, int fromCol, int toRow, int toCol) {
+        if (toRow == fromRow - 1 && toCol == fromCol) return 'U';
+        if (toRow == fromRow + 1 && toCol == fromCol) return 'D';
+        if (toRow == fromRow && toCol == fromCol - 1) return 'L';
+        if (toRow == fromRow && toCol == fromCol + 1) return 'R';
+
+        // backup if something weird happens
+        return 'L';
+}
+
     private void checkWallCollision(Block block) {
         for (Block wall : walls) {
             if (collision(block, wall) || block.x <= 0 || block.x + block.width >= boardWidth) {
