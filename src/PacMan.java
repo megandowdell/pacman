@@ -268,13 +268,28 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         checkWallCollision(pacman);
     }
 
+    // update all ghosts each frame and give each one its own behavior
     private void moveGhosts() {
         for (Block ghost : ghosts) {
+            // check collision with pacman
             if (collision(ghost, pacman)) {
                 handleGhostCollision();
                 return;
             }
-            moveGhost(ghost);
+
+            // pick behavior based on ghost color
+            if (ghost.image == redGhostImage) {
+                moveBlinky(ghost);
+            }
+            else if (ghost.image == pinkGhostImage) {
+                movePinky(ghost);
+            }
+            else if (ghost.image == blueGhostImage) {
+                moveInky(ghost);
+            }
+            else if (ghost.image == orangeGhostImage) {
+                moveClyde(ghost);
+            }
         }
     }
 
