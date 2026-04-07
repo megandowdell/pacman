@@ -1,3 +1,19 @@
+/*
+ * Megan Dowdell and Jacob Igielski
+ * CSC301
+ * Program 3 Pacman
+ *
+ * This project is based on the Java Pac-Man game from:
+ * https://github.com/Nipuna-Lakruwan/PacMan-Java-Game
+ *
+ * The ghost behavior was modified for this project using ideas from:
+ * "Exploring the Possibilities of MADDPG for UAV Swarm Control by Simulating in Pac-Man Environment"
+ * Novikov, Yakovlev, and Gushchin, 2025.
+ *
+ * For this assignment, Blinky uses BFS, Pinky uses A*, Inky uses a hybrid
+ * of the two, and Clyde uses a simple random chase behavior.
+ */
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashSet;
