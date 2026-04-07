@@ -302,6 +302,26 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         checkWallCollision(ghost);
     }
 
+    // blinky will use BFS later, for now just move normally
+    private void moveBlinky(Block ghost) {
+        moveGhost(ghost);
+    }
+
+    // pinky will use A* later
+    private void movePinky(Block ghost) {
+        moveGhost(ghost);
+    }
+
+    // inky will combine blinky and pinky logic
+    private void moveInky(Block ghost) {
+        moveGhost(ghost);
+    }
+
+    // clyde will have simple or random behavior
+    private void moveClyde(Block ghost) {
+        moveGhost(ghost);
+    }
+
     private void checkWallCollision(Block block) {
         for (Block wall : walls) {
             if (collision(block, wall) || block.x <= 0 || block.x + block.width >= boardWidth) {
