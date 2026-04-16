@@ -376,6 +376,36 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         return b.x % tileSize == 0 && b.y % tileSize == 0;
     }
 
+
+    // gives all possible tiles we can move to from a given position (need for bfs, a*, and hybrid)
+    private ArrayList<Point> getNeighbors(int row, int col) {
+
+        ArrayList<Point> neighbors = new ArrayList<Point>();
+
+        // check up
+        if (!isWall(row - 1, col)) {
+            neighbors.add(new Point(col, row - 1));
+        }
+
+        // check down
+        if (!isWall(row + 1, col)) {
+            neighbors.add(new Point(col, row + 1));
+        }
+
+        // check left
+        if (!isWall(row, col - 1)) {
+            neighbors.add(new Point(col - 1, row));
+        }
+
+        // check right
+        if (!isWall(row, col + 1)) {
+            neighbors.add(new Point(col + 1, row));
+        }
+
+        return neighbors;
+    }
+
+
     // BFS method that blinky uses. this tells it the 1st direction it should go.
     private char bfsNextDirection(int startRow, int startCol, int targetRow, int targetCol) {
 
