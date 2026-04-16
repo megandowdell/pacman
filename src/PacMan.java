@@ -334,6 +334,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             char nextDirection = bfsNextDirection(ghostRow, ghostCol, pacmanRow, pacmanCol);
             ghost.updateDirection(nextDirection);
         }
+        moveGhost(ghost);
     }
 
     // pinky will use A* later
@@ -374,6 +375,73 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     private boolean isAtTile(Block b) {
         return b.x % tileSize == 0 && b.y % tileSize == 0;
     }
+
+    // BFS method that blinky uses. this tells it the 1st direction it should go.
+    private char bfsNextDirection(int startRow, int startCol, int targetRow, int targetCol) {
+
+        // queue used for BFS (fifo)
+        Queue<Point> queue = new LinkedList<Point>();
+
+        // keep track of visited tiles so we don’t loop forever
+        HashSet<Point> visited = new HashSet<Point>();
+
+        // parent map lets us go back the path later to go to the 2nd, 3rd, ... direction it should go to
+        HashMap<Point, Point> parent = new HashMap<Point, Point>();
+
+        // starting position of the ghost
+        Point start = new Point(startCol, startRow);
+
+        // target position (where pacman is)
+        Point target = new Point(targetCol, targetRow);
+
+        // begin BFS where blinky is
+        queue.add(start);
+        visited.add(start);
+
+        //BFS loop
+        while (!queue.isEmpty()) {
+
+            // move to next tile
+            Point current = queue.remove();
+
+            // if we reached pacman, we’re done
+            if (current.equals(target)) {
+                break;
+            }
+
+            // check all possible moves from the current tile blinky is on
+            for (Point next : getNeighbors(current.y, current.x)) {
+
+                // if we havent visited
+                if (!visited.contains(next)) {
+                    visited.add(next);
+
+                    // store how we got there (path back)
+                    parent.put(next, current);
+
+                    // add to queue to explore later
+                    queue.add(next);
+                }
+            }
+        }
+
+        // if we somehow never reached pacman just go the same direction (left here)
+        if (!visited.contains(target)) {
+            return 'L';
+        }
+
+        // trace backward from pacman to the ghost until we get to the second tile after the starting tile
+        Point step = target;
+
+        
+        while (parent.containsKey(step) && !parent.get(step).equals(start)) {
+            step = parent.get(step);
+        }
+
+        // convert that step into a direction (up down left right)
+        return getDirectionToward(startRow, startCol, step.y, step.x);
+    }
+
 
     // figure out which direction to move from one tile to another
     private char getDirectionToward(int fromRow, int fromCol, int toRow, int toCol) {
