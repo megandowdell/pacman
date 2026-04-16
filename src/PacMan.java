@@ -19,6 +19,10 @@ import java.awt.event.*;
 import java.util.HashSet;
 import java.util.Random;
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class PacMan extends JPanel implements ActionListener, KeyListener {
     class Block {
@@ -318,9 +322,18 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         checkWallCollision(ghost);
     }
 
-    // blinky will use BFS later, for now just move normally
+    // blinky will use BFS to chase pacman
     private void moveBlinky(Block ghost) {
-        moveGhost(ghost);
+        //pick direction when blinky is on a tile
+        if (isAtTile(ghost) && isAtTile(pacman)) {
+            int ghostRow = getRow(ghost);
+            int ghostCol = getCol(ghost);
+            int pacmanRow = getRow(pacman);
+            int pacmanCol = getCol(pacman);
+
+            char nextDirection = bfsNextDirection(ghostRow, ghostCol, pacmanRow, pacmanCol);
+            ghost.updateDirection(nextDirection);
+        }
     }
 
     // pinky will use A* later
@@ -371,7 +384,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         // backup if something weird happens
         return 'L';
-}
+    }
 
     private void checkWallCollision(Block block) {
         for (Block wall : walls) {
