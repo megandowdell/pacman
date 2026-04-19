@@ -16,13 +16,11 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import javax.swing.Timer;
+
+import static java.lang.Math.abs;
 
 public class PacMan extends JPanel implements ActionListener, KeyListener {
     class Block {
@@ -86,6 +84,29 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         void reset() {
             this.x = this.startX;
             this.y = this.startY;
+        }
+    }
+
+    class AStarNode implements Comparable<AStarNode> {
+        Point point;
+        int g;
+        int h;
+        int f;
+        Point parent;
+
+        AStarNode(Point point, int g, int h, Point parent) {
+            this.point = point;
+            this.g = g;
+            this.h = h;
+            this.f = g + h;
+            this.parent = parent;
+        }
+
+        @Override
+        public int compareTo(AStarNode o) {
+            if (this.f > o.f) { return 1; }
+            if (this.f < o.f) { return -1; }
+            return 0;
         }
     }
 
@@ -339,6 +360,11 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     // pinky will use A* later
     private void movePinky(Block ghost) {
+        // update path after every tile full tile change for ghost
+        if (isAtTile(ghost)) {
+            char nextDirection = aStarDirection(ghost, pacman);
+            ghost.updateDirection(nextDirection);
+        }
         moveGhost(ghost);
     }
 
@@ -586,5 +612,94 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             case 'L' -> pacman.image = pacmanLeftImage;
             case 'R' -> pacman.image = pacmanRightImage;
         }
+    }
+
+    private char aStarDirection(Block ghost, Block pacman) {
+        Point target = getPinkyTarget(pacman);
+        Point starting = new Point(getCol(ghost), getRow(ghost));
+
+        PriorityQueue<AStarNode> availableQueue = new PriorityQueue<>();
+        HashSet<Point> searched = new HashSet<>();
+        HashMap<Point, Point> parentMap = new HashMap<>();
+        HashMap<Point, Integer> costMap = new HashMap<>();
+        AStarNode toSearch;
+        AStarNode toAdd;
+        AStarNode targetFound = null;
+
+        availableQueue.add(new AStarNode(starting, 0, getManhattanDistance(starting, target), null));
+        costMap.put(starting, 0);
+        while (!availableQueue.isEmpty()) {
+            toSearch = availableQueue.remove();
+            if (searched.contains(toSearch.point)) {
+                continue;
+            }
+
+            if (toSearch.point.equals(target)) {
+                targetFound = toSearch;
+                break;
+            }
+
+            searched.add(toSearch.point);
+
+            for (Point neighbor : getNeighbors(toSearch.point.y, toSearch.point.x)) {
+                if (searched.contains(neighbor)) { continue; }
+                if (costMap.get(neighbor) == null || costMap.get(neighbor) > toSearch.g + 1) {
+                    costMap.put(neighbor, toSearch.g + 1);
+                    parentMap.put(neighbor, toSearch.point);
+                    toAdd = new AStarNode(neighbor, toSearch.g + 1, getManhattanDistance(neighbor, target), toSearch.point);
+                    availableQueue.add(toAdd);
+                }
+            }
+
+        }
+
+        if (targetFound != null) {
+            ArrayList<Point> path = new ArrayList<>();
+            path.add(targetFound.point);
+            while (!path.contains(starting)) {
+                path.addFirst(parentMap.get(path.getFirst()));
+            }
+
+            return getDirectionToward(starting.y, starting.x, path.get(1).y, path.get(1).x);
+        }
+
+        return 'U';
+    }
+
+    private int getManhattanDistance(Point first, Point second) {
+        return abs(first.x - second.x) + abs(first.y - second.y);
+    }
+
+    private Point getPinkyTarget(Block pacman) {
+        int targetRow = getRow(pacman);
+        int targetCol = getCol(pacman);
+
+        for (int i = 0; i < 2; i++) {
+            int nextRow = targetRow;
+            int nextCol = targetCol;
+
+            if (pacman.direction == 'U') {
+                nextRow--;
+            } else if (pacman.direction == 'D') {
+                nextRow++;
+            } else if (pacman.direction == 'L') {
+                nextCol--;
+            } else if (pacman.direction == 'R') {
+                nextCol++;
+            }
+
+            if (nextRow < 0 || nextRow >= rowCount || nextCol < 0 || nextCol >= columnCount) {
+                break;
+            }
+
+            if (tileMap[nextRow].charAt(nextCol) == 'X') {
+                break;
+            }
+
+            targetRow = nextRow;
+            targetCol = nextCol;
+        }
+
+        return new Point(targetCol, targetRow);
     }
 }
