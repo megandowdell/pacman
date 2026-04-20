@@ -660,10 +660,11 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 path.addFirst(parentMap.get(path.getFirst()));
             }
 
+            if (path.size() == 1) { return 'L'; }
             return getDirectionToward(starting.y, starting.x, path.get(1).y, path.get(1).x);
         }
 
-        return 'U';
+        return 'L';
     }
 
     private int getManhattanDistance(Point first, Point second) {
@@ -688,11 +689,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 nextCol++;
             }
 
-            if (nextRow < 0 || nextRow >= rowCount || nextCol < 0 || nextCol >= columnCount) {
-                break;
-            }
-
-            if (tileMap[nextRow].charAt(nextCol) == 'X') {
+            if (isWall(nextRow, nextCol)) {
                 break;
             }
 

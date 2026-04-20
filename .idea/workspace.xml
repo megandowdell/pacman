@@ -5,29 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dfe65c90-291a-4db8-8bcd-86b027dd66fb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.agent.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/pacman.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/App.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/PacMan$Block.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/PacMan.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/blueGhost.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/cherry.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/cherry2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/orangeGhost.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/pacmanDown.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/pacmanLeft.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/pacmanRight.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/pacmanUp.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/pinkGhost.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/powerFood.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/redGhost.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/scaredGhost.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/pacman/wall.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/pacman/PacMan$Block.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/pacman/PacMan$Block.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/pacman/PacMan.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/pacman/PacMan.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PacMan.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PacMan.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
