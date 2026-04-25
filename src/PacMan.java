@@ -58,8 +58,11 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     this.y -= this.velocityY;
                     this.direction = prevDirection;
                     updateVelocity();
+                    return;
                 }
             }
+            this.x -= this.velocityX;
+            this.y -= this.velocityY;
         }
 
         void updateVelocity() {
@@ -157,6 +160,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     HashSet<Block> foods;
     HashSet<Block> ghosts;
     Block pacman;
+    char queuedDirection = 'R'; // I added this to make movement cleaner and like the real game
 
     Timer gameLoop;
     char[] directions = {'U', 'D', 'L', 'R'}; //up down left right
@@ -194,8 +198,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private void initializeGhosts() {
         for (Block ghost : ghosts) {
-            char newDirection = directions[random.nextInt(4)];
-            ghost.updateDirection(newDirection);
+            ghost.updateDirection('U');
         }
     }
 
@@ -239,6 +242,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 }
                 else if (tileMapChar == 'P') { //pacman
                     pacman = new Block(pacmanRightImage, x, y, tileSize, tileSize);
+                    pacman.direction = 'R';
+                    pacman.updateVelocity();
+                    queuedDirection = 'R';
                 }
                 else if (tileMapChar == ' ') { //food
                     Block food = new Block(null, x + 14, y + 14, 4, 4);
@@ -303,7 +309,35 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    private boolean canChangeDirection(char direction) {
+        int speed = tileSize / 4;
+        int nextX = pacman.x;
+        int nextY = pacman.y;
+
+        if (direction == 'U') nextY -= speed;
+        else if (direction == 'D') nextY += speed;
+        else if (direction == 'L') nextX -= speed;
+        else if (direction == 'R') nextX += speed;
+
+        Block nextBlock = new Block(pacman.image, nextX, nextY, pacman.width, pacman.height);
+
+        for (Block wall : walls) {
+            if (collision(nextBlock, wall)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void movePacman() {
+        // i added this bit of logic for the queueing directions
+        if (queuedDirection != pacman.direction && canChangeDirection(queuedDirection)) {
+            pacman.updateDirection(queuedDirection);
+            pacman.updateVelocity();
+            updatePacmanImage();
+        }
+
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
         checkWallCollision(pacman);
@@ -335,9 +369,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     private void moveGhost(Block ghost) {
-        if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
-            ghost.updateDirection('U');
-        }
         ghost.x += ghost.velocityX;
         ghost.y += ghost.velocityY;
         checkWallCollision(ghost);
@@ -346,13 +377,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     // blinky will use BFS to chase pacman
     private void moveBlinky(Block ghost) {
         //pick direction when blinky is on a tile
-        if (isAtTile(ghost) && isAtTile(pacman)) {
+        if (isAtTile(ghost) && isAtIntersection(ghost)) {
             int ghostRow = getRow(ghost);
             int ghostCol = getCol(ghost);
             int pacmanRow = getRow(pacman);
             int pacmanCol = getCol(pacman);
 
-            char nextDirection = bfsNextDirection(ghostRow, ghostCol, pacmanRow, pacmanCol);
+            char nextDirection = bfsNextDirection(ghostRow, ghostCol, pacmanRow, pacmanCol, pacman.direction);
             ghost.updateDirection(nextDirection);
         }
         moveGhost(ghost);
@@ -361,7 +392,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     // pinky will use A* later
     private void movePinky(Block ghost) {
         // update path after every tile full tile change for ghost
-        if (isAtTile(ghost)) {
+        if (isAtTile(ghost) && isAtIntersection(ghost)) {
             char nextDirection = aStarDirection(ghost, pacman);
             ghost.updateDirection(nextDirection);
         }
@@ -402,6 +433,36 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         return b.x % tileSize == 0 && b.y % tileSize == 0;
     }
 
+    // check if ghost is at an intersection, got some help from chatgpt for how to specifically figure this out because intersections are more like decision points so there are many cases
+    private boolean isAtIntersection(Block block) {
+        int row = getRow(block);
+        int col = getCol(block);
+
+        char dir = block.direction;
+
+        boolean canForward = false;
+        boolean canLeft = false;
+        boolean canRight = false;
+
+        if (dir == 'U' || dir == 'D') {
+            canForward = !isWall(dir == 'U' ? row - 1 : row + 1, col);
+            canLeft = !isWall(row, col - 1);
+            canRight = !isWall(row, col + 1);
+        } else {
+            canForward = !isWall(row, dir == 'L' ? col - 1 : col + 1);
+            canLeft = !isWall(row - 1, col);
+            canRight = !isWall(row + 1, col);
+        }
+
+        // Case 1: can't go forward → must decide
+        if (!canForward) return true;
+
+        // Case 2: can go forward but also have options
+        if (canLeft || canRight) return true;
+
+        return false;
+    }
+
 
     // gives all possible tiles we can move to from a given position (need for bfs, a*, and hybrid)
     private ArrayList<Point> getNeighbors(int row, int col) {
@@ -433,7 +494,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
 
     // BFS method that blinky uses. this tells it the 1st direction it should go.
-    private char bfsNextDirection(int startRow, int startCol, int targetRow, int targetCol) {
+    private char bfsNextDirection(int startRow, int startCol, int targetRow, int targetCol, char currentDirection) {
 
         // queue used for BFS (fifo)
         Queue<Point> queue = new LinkedList<Point>();
@@ -483,7 +544,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         // if we somehow never reached pacman just go the same direction (left here)
         if (!visited.contains(target)) {
-            return 'L';
+            return currentDirection;
         }
 
         // trace backward from pacman to the ghost until we get to the second tile after the starting tile
@@ -553,12 +614,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     public void resetPositions() {
         pacman.reset();
-        pacman.velocityX = 0;
-        pacman.velocityY = 0;
+        pacman.direction = 'R';
+        pacman.updateVelocity();
+        queuedDirection = 'R';
+        updatePacmanImage();
         for (Block ghost : ghosts) {
             ghost.reset();
-            char newDirection = directions[random.nextInt(4)];
-            ghost.updateDirection(newDirection);
+            ghost.updateDirection('U');
         }
     }
 
@@ -575,16 +637,16 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     public void keyTyped(KeyEvent e) {}
 
     @Override
-    public void keyPressed(KeyEvent e) {}
-
-    @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyPressed(KeyEvent e) {
         if (gameOver) {
             restartGame();
         } else {
             handleKeyPress(e);
         }
     }
+
+    @Override
+    public void keyReleased(KeyEvent e) {}
 
     private void restartGame() {
         loadMap();
@@ -597,10 +659,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private void handleKeyPress(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP -> pacman.updateDirection('U');
-            case KeyEvent.VK_DOWN -> pacman.updateDirection('D');
-            case KeyEvent.VK_LEFT -> pacman.updateDirection('L');
-            case KeyEvent.VK_RIGHT -> pacman.updateDirection('R');
+            case KeyEvent.VK_UP -> queuedDirection = 'U';
+            case KeyEvent.VK_DOWN -> queuedDirection = 'D';
+            case KeyEvent.VK_LEFT -> queuedDirection = 'L';
+            case KeyEvent.VK_RIGHT -> queuedDirection = 'R';
         }
         updatePacmanImage();
     }
@@ -656,15 +718,15 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         if (targetFound != null) {
             ArrayList<Point> path = new ArrayList<>();
             path.add(targetFound.point);
-            while (!path.contains(starting)) {
+            while (!path.getFirst().equals(starting)) {
                 path.addFirst(parentMap.get(path.getFirst()));
             }
 
-            if (path.size() == 1) { return 'L'; }
+            if (path.size() == 1) { return ghost.direction; }
             return getDirectionToward(starting.y, starting.x, path.get(1).y, path.get(1).x);
         }
 
-        return 'L';
+        return ghost.direction;
     }
 
     private int getManhattanDistance(Point first, Point second) {
