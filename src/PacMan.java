@@ -17,6 +17,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.Timer;
 
@@ -399,8 +400,21 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         moveGhost(ghost);
     }
 
-    // inky will combine blinky and pinky logic
+    // inky combines blinky and pinky behavior
     private void moveInky(Block ghost) {
+
+        // only decide direction when at a tile AND at an intersection (same as other ghosts)
+        if (isAtTile(ghost) && isAtIntersection(ghost)) {
+
+            // get hybrid target
+            Point target = getInkyTarget(pacman);
+
+            // use A* to move toward that target (same logic as pinky)
+            char nextDirection = aStarDirectionToTarget(ghost, target);
+
+            ghost.updateDirection(nextDirection);
+        }
+
         moveGhost(ghost);
     }
 
@@ -716,7 +730,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         if (targetFound != null) {
-            ArrayList<Point> path = new ArrayList<>();
+            LinkedList<Point> path = new LinkedList<>();
             path.add(targetFound.point);
             while (!path.getFirst().equals(starting)) {
                 path.addFirst(parentMap.get(path.getFirst()));
@@ -761,4 +775,89 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         return new Point(targetCol, targetRow);
     }
+
+    // inky uses a hybrid target between pacman's current location and pinky's predicted location
+    private Point getInkyTarget(Block pacman) {
+
+        // pacman's current position (what blinky uses)
+        int currentRow = getRow(pacman);
+        int currentCol = getCol(pacman);
+
+        // pinky's target
+        Point pinkyTarget = getPinkyTarget(pacman);
+
+        // find midpoint between the two
+        int midRow = (currentRow + pinkyTarget.y) / 2;
+        int midCol = (currentCol + pinkyTarget.x) / 2;
+
+        // if midpoint is inside a wall just use pacman's position (bfs dominant)
+        if (isWall(midRow, midCol)) {
+            return new Point(currentCol, currentRow);
+        }
+
+        return new Point(midCol, midRow);
+    }
+
+    // A* method for inky that can move toward any target (instead of just giving a single direction)
+    private char aStarDirectionToTarget(Block ghost, Point target) {
+
+        Point starting = new Point(getCol(ghost), getRow(ghost));
+
+        PriorityQueue<AStarNode> availableQueue = new PriorityQueue<>();
+        HashSet<Point> searched = new HashSet<>();
+        HashMap<Point, Point> parentMap = new HashMap<>();
+        HashMap<Point, Integer> costMap = new HashMap<>();
+
+        AStarNode targetFound = null;
+
+        availableQueue.add(new AStarNode(starting, 0, getManhattanDistance(starting, target), null));
+        costMap.put(starting, 0);
+
+        while (!availableQueue.isEmpty()) {
+            AStarNode current = availableQueue.remove();
+
+            if (searched.contains(current.point)) continue;
+
+            if (current.point.equals(target)) {
+                targetFound = current;
+                break;
+            }
+
+            searched.add(current.point);
+
+            for (Point neighbor : getNeighbors(current.point.y, current.point.x)) {
+
+                if (searched.contains(neighbor)) continue;
+
+                if (costMap.get(neighbor) == null || costMap.get(neighbor) > current.g + 1) {
+
+                    costMap.put(neighbor, current.g + 1);
+                    parentMap.put(neighbor, current.point);
+
+                    availableQueue.add(new AStarNode(
+                        neighbor,
+                        current.g + 1,
+                        getManhattanDistance(neighbor, target),
+                        current.point
+                    ));
+                }
+            }
+        }
+
+        if (targetFound != null) {
+            LinkedList<Point> path = new LinkedList<>();
+            path.add(targetFound.point);
+
+            while (!path.getFirst().equals(starting)) {
+                path.addFirst(parentMap.get(path.getFirst()));
+            }
+
+            if (path.size() == 1) return ghost.direction;
+
+            return getDirectionToward(starting.y, starting.x, path.get(1).y, path.get(1).x);
+        }
+
+        return ghost.direction;
+    }
+
 }
