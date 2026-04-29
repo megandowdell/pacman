@@ -17,6 +17,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.Queue;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -798,22 +799,34 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         return new Point(midCol, midRow);
     }
 
-    // A* method for inky that can move toward any target (instead of just giving a single direction)
+    // A* method for inky that can move toward any target tile
     private char aStarDirectionToTarget(Block ghost, Point target) {
 
+        // starting tile
         Point starting = new Point(getCol(ghost), getRow(ghost));
 
+        // priority queue (min-heap)
         PriorityQueue<AStarNode> availableQueue = new PriorityQueue<>();
+
+        // keeps track of already explored tiles
         HashSet<Point> searched = new HashSet<>();
+
+        // to reconstruct the path once we reach the target
         HashMap<Point, Point> parentMap = new HashMap<>();
+
+        // stores the best cost to reach each tile
         HashMap<Point, Integer> costMap = new HashMap<>();
 
+        // will hold the final node when we get to the target
         AStarNode targetFound = null;
 
+        // start A* from the ghost's position
         availableQueue.add(new AStarNode(starting, 0, getManhattanDistance(starting, target), null));
         costMap.put(starting, 0);
 
+        // main A* loop (taken from Jacob's a* algorithm)
         while (!availableQueue.isEmpty()) {
+
             AStarNode current = availableQueue.remove();
 
             if (searched.contains(current.point)) continue;
@@ -823,17 +836,25 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 break;
             }
 
+            // mark this tile as processed
             searched.add(current.point);
 
+            // check all non-wall neighboring tiles
             for (Point neighbor : getNeighbors(current.point.y, current.point.x)) {
 
+                // skip neighbors we've already processed
                 if (searched.contains(neighbor)) continue;
 
+                // if we found a better path to this neighbor, update it
                 if (costMap.get(neighbor) == null || costMap.get(neighbor) > current.g + 1) {
 
+                    // update cost
                     costMap.put(neighbor, current.g + 1);
+
+                    // store how we got here (for reconstructing path)
                     parentMap.put(neighbor, current.point);
 
+                    // add neighbor to the queue with updated g and heuristic h
                     availableQueue.add(new AStarNode(
                         neighbor,
                         current.g + 1,
@@ -844,7 +865,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             }
         }
 
+        // if we found a path to the target
         if (targetFound != null) {
+
+            // reconstruct the path by moving back from target to start
             LinkedList<Point> path = new LinkedList<>();
             path.add(targetFound.point);
 
@@ -852,12 +876,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 path.addFirst(parentMap.get(path.getFirst()));
             }
 
+            // if at the target keep current direction
             if (path.size() == 1) return ghost.direction;
 
+            // return the direction of the NEXT step in the path
             return getDirectionToward(starting.y, starting.x, path.get(1).y, path.get(1).x);
         }
 
+        // backup if no path found (just keep current direction)
         return ghost.direction;
     }
-
 }
