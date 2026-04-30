@@ -16,6 +16,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Queue;
 
@@ -407,11 +408,20 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         // only decide direction when at a tile AND at an intersection (same as other ghosts)
         if (isAtTile(ghost) && isAtIntersection(ghost)) {
 
-            // get hybrid target
-            Point target = getInkyTarget(pacman);
+            Point ghostPoint = new Point(getCol(ghost), getRow(ghost));
+            Point pacmanPoint = new Point(getCol(pacman), getRow(pacman));
+            int distanceToPacman = getManhattanDistance(ghostPoint, pacmanPoint);
 
-            // use A* to move toward that target (same logic as pinky)
-            char nextDirection = aStarDirectionToTarget(ghost, target);
+            char nextDirection;
+            // if distance is greater than 3 we use aStar to get the directions to pacman's next intersection, sometimes even if the distance is small we will randomly use the aStar thing so it doesn't infinitel get stuck chasing him directly
+            if (distanceToPacman > 5 || random.nextDouble() > 0.8) {
+                Point target = getInkyTarget(pacman);
+                nextDirection = aStarDirectionToTarget(ghost, target);
+            // if distance is small then just go directly towards pacman using bfs
+            } else {
+                nextDirection = bfsNextDirection(getRow(ghost), getCol(ghost), getRow(pacman), getCol(pacman), pacman.direction);
+            }
+
 
             ghost.updateDirection(nextDirection);
         }
@@ -780,23 +790,63 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     // inky uses a hybrid target between pacman's current location and pinky's predicted location
     private Point getInkyTarget(Block pacman) {
 
-        // pacman's current position (what blinky uses)
-        int currentRow = getRow(pacman);
-        int currentCol = getCol(pacman);
+        Block block = new Block(pacman.image, pacman.x, pacman.y, tileSize, tileSize);
+        block.direction = pacman.direction;
+        block = getBlockNextIntersection(block); // find pacmans next intersection
 
-        // pinky's target
-        Point pinkyTarget = getPinkyTarget(pacman);
+        int row = getRow(block);
+        int col = getCol(block);
+        char reverseDirection = getOppositeDirection(pacman.direction);
 
-        // find midpoint between the two
-        int midRow = (currentRow + pinkyTarget.y) / 2;
-        int midCol = (currentCol + pinkyTarget.x) / 2;
-
-        // if midpoint is inside a wall just use pacman's position (bfs dominant)
-        if (isWall(midRow, midCol)) {
-            return new Point(currentCol, currentRow);
+        ArrayList<Point> neighbors = getNeighbors(row, col);
+        neighbors.removeIf(p -> getDirectionToward(row, col, p.y, p.x) == reverseDirection);
+        if (neighbors.isEmpty()) {
+            return new Point(col, row);
         }
 
-        return new Point(midCol, midRow);
+        Point nextPoint = neighbors.get(random.nextInt(neighbors.size()));
+        block.direction = getDirectionToward(row, col, nextPoint.y, nextPoint.x);
+        block = getBlockNextIntersection(block);
+
+        return new Point(getCol(block), getRow(block));
+    }
+
+    private char getOppositeDirection(char dir) {
+        if (dir == 'U') return 'D';
+        if (dir == 'D') return 'U';
+        if (dir == 'L') return 'R';
+        return 'L';
+    }
+
+    private Block getBlockNextIntersection(Block block) {
+        boolean movedOnce = false;
+        while (!isAtIntersection(block) || !movedOnce) {
+
+            int nextRow = getRow(block);
+            int nextCol = getCol(block);
+
+            if (block.direction == 'U') {
+                nextRow--;
+            } else if (block.direction == 'D') {
+                nextRow++;
+            } else if (block.direction == 'L') {
+                nextCol--;
+            } else if (block.direction == 'R') {
+                nextCol++;
+            }
+
+            if (isWall(nextRow, nextCol)) {
+                break;
+            }
+
+            // update block poisition
+            block.x = nextCol * tileSize;
+            block.y = nextRow * tileSize;
+
+            movedOnce = true;
+        }
+
+        return block;
     }
 
     // A* method for inky that can move toward any target tile

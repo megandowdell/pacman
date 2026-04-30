@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="dfe65c90-291a-4db8-8bcd-86b027dd66fb" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/pacman/PacMan$AStarNode.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/pacman/PacMan$AStarNode.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/pacman/PacMan$Block.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/pacman/PacMan$Block.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/pacman/PacMan.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/pacman/PacMan.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PacMan.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PacMan.java" afterDir="false" />
     </list>
